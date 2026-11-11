@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #F7F8F5;
+    --text-main: #1A2E28;
+    --primary: #176B52;
+    --primary-hover: #125440;
+    --card-bg: #FFFFFF;
+    --border-color: #D4DDD5;
+  }
+
+  .dark {
+    --bg-main: #101B19;
+    --text-main: #E2ECE9;
+    --primary: #81D3AD;
+    --primary-hover: #5EC494;
+    --card-bg: #162622;
+    --border-color: #233A34;
+  }
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'DM Sans', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Utilities for Fonts */
+.font-display {
+  font-family: 'Fraunces', serif;
+}
+
+.font-sans {
+  font-family: 'DM Sans', sans-serif;
+}
