@@ -1,0 +1,18 @@
+[Supabase Auth Users (auth.users)] 1 <---> 1 [profiles]
+[departments] 1 <---> 1 [department_hod_assignments] (via faculty)
+[departments] 1 <---> N [programs]
+[programs] 1 <---> N [batches]
+[batches] 1 <---> N [sections]
+[batches] 1 <---> N [batch_semester_schedules]
+[sections] 1 <---> N [student_enrollments]
+[students] 1 <---> N [student_enrollments]
+[student_enrollments] 1 <---> N [section_transfer_requests]
+[subjects] 1 <---> N [subject_offerings]
+[subject_offerings] 1 <---> 1 [teaching_assignments]
+[sections] 1 <---> 1 [section_mentor_assignments]
+[subject_offerings] 1 <---> N [attendance_sessions]
+[attendance_sessions] 1 <---> N [attendance_records]
+[attendance_records] 1 <---> N [attendance_correction_requests]
+[registration_forms] 1 <---> N [registration_submissions]
+[faculty_profiles] 1 <---> N [faculty_permission_grants]
+[Biometric Schema (secure)] <---> [face_embeddings] / [recognition_events] (Restricted access)
