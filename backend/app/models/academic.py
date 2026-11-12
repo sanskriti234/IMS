@@ -214,13 +214,10 @@ class StudentEnrollment(Base, TimestampMixin):
             postgresql_where=text("status = 'active'"),
         ),
         CheckConstraint(
-            """
-            (status = 'active' AND ended_at IS NULL)
-            OR
-            (status != 'active' AND ended_at IS NOT NULL)
-            """,
+            "(status = 'active' AND ended_at IS NULL) "
+            "OR (status != 'active' AND ended_at IS NOT NULL)",
             name="ck_enrollment_status_dates",
-        ),
+        ),  
         Index(
             "ix_enrollment_section_session",
             "section_id",

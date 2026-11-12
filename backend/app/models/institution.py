@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     Index,
     text,
+    Boolean,
     ForeignKey,
     UniqueConstraint,
     CheckConstraint,
@@ -35,6 +36,13 @@ class Department(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
     )
 
 
@@ -72,11 +80,8 @@ class DepartmentHODAssignment(Base, TimestampMixin):
     )
     __table_args__ = (
         CheckConstraint(
-            """
-            (is_active IS TRUE AND ended_at IS NULL)
-            OR
-            (is_active IS FALSE AND ended_at IS NOT NULL)
-            """,
+            "(is_active IS TRUE AND ended_at IS NULL) "
+            "OR (is_active IS FALSE AND ended_at IS NOT NULL)",
             name="ck_hod_assignment_active_ended_at",
         ),
         Index(

@@ -165,11 +165,8 @@ class TeachingAssignment(Base, TimestampMixin):
             postgresql_where=text("is_active IS TRUE"),
         ),
         CheckConstraint(
-            """
-            (is_active IS TRUE AND ended_at IS NULL)
-            OR
-            (is_active IS FALSE AND ended_at IS NOT NULL)
-            """,
+            "(is_active IS TRUE AND ended_at IS NULL) "
+            "OR (is_active IS FALSE AND ended_at IS NOT NULL)",
             name="ck_teaching_assignment_active_ended_at",
         ),
     )
@@ -223,11 +220,8 @@ class SectionMentorAssignment(Base, TimestampMixin):
             postgresql_where=text("is_active IS TRUE"),
         ),
         CheckConstraint(
-            """
-            (is_active IS TRUE AND ended_at IS NULL)
-            OR
-            (is_active IS FALSE AND ended_at IS NOT NULL)
-            """,
+            "(is_active IS TRUE AND ended_at IS NULL) "
+            "OR (is_active IS FALSE AND ended_at IS NOT NULL)",
             name="ck_mentor_assignment_active_ended_at",
         ),
     )

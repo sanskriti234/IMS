@@ -67,3 +67,20 @@ Current order:
 8. Generate one reviewed SQL script for Supabase Dashboard.
 
 We will not execute any SQL until the complete schema is approved.
+
+
+
+
+
+
+
+
+Order	Module	Functionality
+1	Institution	Departments, programs, batches, sections
+2	Academic Management	Academic years, sessions, student enrollments, transfers
+3	Assignments	HOD, faculty, teaching and mentorship assignments
+4	Registration	Forms, student submissions, review and approval
+5	Attendance	Sessions, records, corrections
+6	Monitoring	Audit logs, notifications, mentorship follow-ups
+7	Authentication	Supabase Auth, JWT, permissions
+8	Security	RLS, access policies and production hardening
