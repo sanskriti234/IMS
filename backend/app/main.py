@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.api.v1.endpoints import institution, assignments, attendance, registration, monitoring
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -9,14 +10,19 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Set all CORS enabled origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(institution.router, prefix=settings.API_V1_STR)
+app.include_router(assignments.router, prefix=settings.API_V1_STR)
+app.include_router(attendance.router, prefix=settings.API_V1_STR)
+app.include_router(registration.router, prefix=settings.API_V1_STR)
+app.include_router(monitoring.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health Check"])
 async def health_check():

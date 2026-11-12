@@ -16,3 +16,54 @@
 [registration_forms] 1 <---> N [registration_submissions]
 [faculty_profiles] 1 <---> N [faculty_permission_grants]
 [Biometric Schema (secure)] <---> [face_embeddings] / [recognition_events] (Restricted access)
+
+
+Yes. We can use the Supabase Cloud Dashboard as the database creation interface instead of applying tables through Alembic.
+
+But we need to follow the correct order: models first, SQL schema second, Supabase Dashboard third.
+
+### Our workflow
+
+1. Finalize SQLAlchemy models
+
+   Define tables, columns, UUIDs, foreign keys, constraints, indexes and relationships.
+2. Generate PostgreSQL SQL scripts
+
+   Convert the approved models into SQL `CREATE TABLE`, `ALTER TABLE`, index and constraint statements.
+3. Execute through Supabase Dashboard
+
+   Open Supabase → SQL Editor → New Query → paste the reviewed SQL → Run.
+4. Verify database
+
+   Check Table Editor, foreign keys, indexes, constraints and relationships.
+5. Connect FastAPI
+
+   Use the Supabase Cloud PostgreSQL connection string through Secrets Manager/environment configuration.
+
+### One important distinction
+
+We should still retain Alembic in the project.
+
+- Supabase Dashboard: initial schema creation and visual inspection.
+- SQL scripts: controlled database setup.
+- Alembic: future schema versioning and upgrades.
+- SQLAlchemy: application-side ORM models.
+
+Do not manually create tables independently of the models. That will cause schema drift.
+
+### What we do now
+
+We will finalize all model files before generating SQL.
+
+Current order:
+
+1. `identity.py`
+2. `institution.py`
+3. `assignments.py`
+4. `attendance.py`
+5. `registration.py`
+6. `monitoring.py`
+7. Verify complete schema
+8. Generate one reviewed SQL script for Supabase Dashboard.
+
+We will not execute any SQL until the complete schema is approved.
