@@ -6,6 +6,16 @@ import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { Logo } from '../common/Logo';
+import { getSupabaseBrowserClient } from '@/lib/supabase';
+
+type UserRole = 'admin' | 'faculty' | 'student';
+
+interface CurrentUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role_type: UserRole;
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -22,20 +32,85 @@ export function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setError('');
     setLoading(true);
 
+    const supabase = getSupabaseBrowserClient();
+
     try {
-      // Simulate API call check for route testing
-      setTimeout(() => {
-        setLoading(false);
-        router.push('/admin/dashboard');
-      }, 1000);
+      // 1. Authenticate using Supabase Auth.
+      const { data, error: loginError } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+      if (loginError) {
+        throw new Error('Invalid institutional email or password.');
+      }
+
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('Authentication succeeded but no access token was returned.');
+      }
+
+      // 2. Ask FastAPI to resolve the institutional profile.
+      const apiBaseUrl = (
+        process.env.NEXT_PUBLIC_API_URL ||
+        'http://127.0.0.1:8000/api/v1'
+      ).replace(/\/+$/, '');
+
+      const response = await fetch(`${apiBaseUrl}/auth/me`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+
+        throw new Error(
+          result?.detail ||
+          'Your account does not have an active institutional profile.'
+        );
+      }
+
+      const user: CurrentUser = await response.json();
+
+      // 3. Redirect according to the database role.
+      const dashboardRoutes: Record<UserRole, string> = {
+        admin: '/admin/dashboard',
+        faculty: '/faculty/dashboard',
+        student: '/student/dashboard',
+      };
+
+      const destination = dashboardRoutes[user.role_type];
+
+      if (!destination) {
+        throw new Error('Your account has an unsupported institutional role.');
+      }
+
+      router.replace(destination);
+
     } catch (err) {
-      setError('Invalid institutional credentials. Please try again.');
+      // Do not leave an authenticated session when profile verification fails.
+      await supabase.auth.signOut();
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to sign in. Please try again.'
+      );
+    } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[var(--bg-main)] text-[var(--text-main)] font-sans">

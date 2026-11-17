@@ -14,7 +14,9 @@ from app.api.v1.endpoints import (
     registration,
     monitoring,
     admin_dashboard,
+    auth,
 )
+from app.api.v1.endpoints import faculty
 from sqlalchemy import text
 from fastapi import HTTPException
 from app.database.session import AsyncSessionLocal
@@ -42,8 +44,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix=settings.API_V1_STR)
 
-app.include_router(institution.router, prefix=settings.API_V1_STR)
+app.include_router(
+    institution.institution_router,
+    prefix=settings.API_V1_STR,
+)
+app.include_router(
+    faculty.router,
+    prefix=settings.API_V1_STR,
+)
 app.include_router(assignments.router, prefix=settings.API_V1_STR)
 app.include_router(attendance.router, prefix=settings.API_V1_STR)
 app.include_router(registration.router, prefix=settings.API_V1_STR)

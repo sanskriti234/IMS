@@ -1,6 +1,6 @@
 
-import uuid
 import enum
+import uuid
 
 from datetime import date, datetime
 
@@ -10,17 +10,21 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
-    Enum as SQLEnum,
     UniqueConstraint,
     CheckConstraint,
     Index,
-    Boolean,
+    func,
     text,
 )
+from sqlalchemy.dialects.postgresql import UUID, ENUM as PGEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base, TimestampMixin
 
+
+# ============================================================
+# ENUMS
+# ============================================================
 
 class AcademicYearStatus(str, enum.Enum):
     PLANNED = "planned"
@@ -48,10 +52,59 @@ class TransferRequestStatus(str, enum.Enum):
     REJECTED = "rejected"
 
 
+# ============================================================
+# DATABASE ENUM TYPES
+# Reuse existing PostgreSQL enum types.
+# ============================================================
+
+academic_year_status_enum = PGEnum(
+    AcademicYearStatus,
+    name="academic_year_status",
+    values_callable=lambda enum_cls: [
+        member.value for member in enum_cls
+    ],
+    create_type=False,
+)
+
+academic_session_status_enum = PGEnum(
+    AcademicSessionStatus,
+    name="academic_session_status",
+    values_callable=lambda enum_cls: [
+        member.value for member in enum_cls
+    ],
+    create_type=False,
+)
+
+enrollment_status_enum = PGEnum(
+    EnrollmentStatus,
+    name="enrollment_status",
+    values_callable=lambda enum_cls: [
+        member.value for member in enum_cls
+    ],
+    create_type=False,
+)
+
+transfer_request_status_enum = PGEnum(
+    TransferRequestStatus,
+    name="transfer_request_status",
+    values_callable=lambda enum_cls: [
+        member.value for member in enum_cls
+    ],
+    create_type=False,
+)
+
+
+# ============================================================
+# ACADEMIC YEAR
+# Represents the complete programme cohort.
+# Example: 2023-27
+# ============================================================
+
 class AcademicYear(Base, TimestampMixin):
     __tablename__ = "academic_years"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -73,13 +126,7 @@ class AcademicYear(Base, TimestampMixin):
     )
 
     status: Mapped[AcademicYearStatus] = mapped_column(
-        SQLEnum(
-            AcademicYearStatus,
-            name="academic_year_status",
-            values_callable=lambda enum_cls: [
-                member.value for member in enum_cls
-            ],
-        ),
+        academic_year_status_enum,
         default=AcademicYearStatus.PLANNED,
         nullable=False,
     )
@@ -92,21 +139,36 @@ class AcademicYear(Base, TimestampMixin):
     )
 
 
+# ============================================================
+# ACADEMIC SESSION
+# Represents one semester within a cohort.
+# Example: Semester 1 of Batch 2023-27
+# ============================================================
+
 class AcademicSession(Base, TimestampMixin):
     __tablename__ = "academic_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("academic_years.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "academic_years.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     batch_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("batches.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "batches.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
@@ -126,13 +188,7 @@ class AcademicSession(Base, TimestampMixin):
     )
 
     status: Mapped[AcademicSessionStatus] = mapped_column(
-        SQLEnum(
-            AcademicSessionStatus,
-            name="academic_session_status",
-            values_callable=lambda enum_cls: [
-                member.value for member in enum_cls
-            ],
-        ),
+        academic_session_status_enum,
         default=AcademicSessionStatus.PLANNED,
         nullable=False,
     )
@@ -144,53 +200,73 @@ class AcademicSession(Base, TimestampMixin):
             "semester_number",
             name="uq_batch_academic_year_semester",
         ),
+
         CheckConstraint(
             "semester_number > 0",
-            name="ck_academic_sessions_semester_number"
+            name="ck_academic_sessions_semester_number",
         ),
+
         CheckConstraint(
             "end_date > start_date",
             name="ck_academic_session_valid_dates",
         ),
+
         Index(
             "ix_academic_session_batch_status",
             "batch_id",
             "status",
         ),
+
+        Index(
+            "ix_academic_session_year_semester",
+            "academic_year_id",
+            "semester_number",
+        ),
     )
 
+
+# ============================================================
+# STUDENT ENROLLMENT
+# ============================================================
 
 class StudentEnrollment(Base, TimestampMixin):
     __tablename__ = "student_enrollments"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     student_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("student_profiles.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "student_profiles.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     academic_session_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("academic_sessions.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "academic_sessions.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     section_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("sections.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "sections.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     status: Mapped[EnrollmentStatus] = mapped_column(
-        SQLEnum(
-            EnrollmentStatus,
-            name="enrollment_status",
-            values_callable=lambda enum_cls: [
-                member.value for member in enum_cls
-            ],
-        ),
+        enrollment_status_enum,
         default=EnrollmentStatus.ACTIVE,
         nullable=False,
     )
@@ -213,11 +289,16 @@ class StudentEnrollment(Base, TimestampMixin):
             unique=True,
             postgresql_where=text("status = 'active'"),
         ),
+
         CheckConstraint(
-            "(status = 'active' AND ended_at IS NULL) "
-            "OR (status != 'active' AND ended_at IS NOT NULL)",
+            """
+            (status = 'active' AND ended_at IS NULL)
+            OR
+            (status != 'active' AND ended_at IS NOT NULL)
+            """,
             name="ck_enrollment_status_dates",
-        ),  
+        ),
+
         Index(
             "ix_enrollment_section_session",
             "section_id",
@@ -226,26 +307,43 @@ class StudentEnrollment(Base, TimestampMixin):
     )
 
 
+# ============================================================
+# SECTION TRANSFER REQUEST
+# ============================================================
+
 class SectionTransferRequest(Base, TimestampMixin):
     __tablename__ = "section_transfer_requests"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     enrollment_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("student_enrollments.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "student_enrollments.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     target_section_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("sections.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "sections.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
     requested_by: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("profiles.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "profiles.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
     )
 
@@ -255,19 +353,17 @@ class SectionTransferRequest(Base, TimestampMixin):
     )
 
     status: Mapped[TransferRequestStatus] = mapped_column(
-        SQLEnum(
-            TransferRequestStatus,
-            name="transfer_request_status",
-            values_callable=lambda enum_cls: [
-                member.value for member in enum_cls
-            ],
-        ),
+        transfer_request_status_enum,
         default=TransferRequestStatus.PENDING,
         nullable=False,
     )
 
     reviewed_by: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("profiles.id", ondelete="RESTRICT"),
+        UUID(as_uuid=True),
+        ForeignKey(
+            "profiles.id",
+            ondelete="RESTRICT",
+        ),
         nullable=True,
     )
 
@@ -288,13 +384,20 @@ class SectionTransferRequest(Base, TimestampMixin):
             unique=True,
             postgresql_where=text("status = 'pending'"),
         ),
+
         CheckConstraint(
             """
-            (status = 'pending' AND reviewed_by IS NULL AND reviewed_at IS NULL)
+            (
+                status = 'pending'
+                AND reviewed_by IS NULL
+                AND reviewed_at IS NULL
+            )
             OR
-            (status IN ('approved', 'rejected')
+            (
+                status IN ('approved', 'rejected')
                 AND reviewed_by IS NOT NULL
-                AND reviewed_at IS NOT NULL)
+                AND reviewed_at IS NOT NULL
+            )
             """,
             name="ck_transfer_request_review_consistency",
         ),

@@ -1,0 +1,28 @@
+$supabaseUrl = "https://cufzdbuavxnrcrltnbei.supabase.co"
+$anonKey = "sb_publishable_KlUpoGTuMWviSJ_WiK0-eA_3uND0oTv"
+$email = "mishrasanskriti38@gmail.com"
+
+$password = Read-Host "Enter your Supabase password" -AsSecureString
+$passwordText = [System.Net.NetworkCredential]::new("", $password).Password
+
+$body = @{
+    email = $email
+    password = $passwordText
+} | ConvertTo-Json
+
+$response = Invoke-RestMethod `
+    -Method POST `
+    -Uri "$supabaseUrl/auth/v1/token?grant_type=password" `
+    -Headers @{
+        apikey = $anonKey
+    } `
+    -ContentType "application/json" `
+    -Body $body
+
+Write-Host "Token type:" $response.token_type
+Write-Host "User ID:" $response.user.id
+
+$accessToken = $response.access_token
+
+
+Command run access token: Set-Clipboard -Value $accessToken

@@ -17,12 +17,6 @@ export function OverviewCards({
 }: OverviewCardsProps) {
   const stats = [
     {
-      label: 'Total departments',
-      value: counts.departments,
-      description: 'Across engineering, sciences & humanities',
-      Icon: Building2,
-    },
-    {
       label: 'Total students',
       value: counts.students,
       description: 'Enrolled across undergraduate & postgraduate programmes',

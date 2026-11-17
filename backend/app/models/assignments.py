@@ -56,6 +56,13 @@ class Subject(Base, TimestampMixin):
         nullable=False,
     )
 
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default=text("true"),
+        nullable=False,
+    )
+
     __table_args__ = (
         UniqueConstraint(
             "department_id",
@@ -223,5 +230,39 @@ class SectionMentorAssignment(Base, TimestampMixin):
             "(is_active IS TRUE AND ended_at IS NULL) "
             "OR (is_active IS FALSE AND ended_at IS NOT NULL)",
             name="ck_mentor_assignment_active_ended_at",
+        ),
+    )
+
+
+class AcademicSessionSubject(Base, TimestampMixin):
+    """
+    Subjects allocated to a particular batch semester session.
+
+    This is the semester-level curriculum allocation.
+    Section-specific SubjectOffering records are generated separately.
+    """
+
+    __tablename__ = "academic_session_subjects"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    academic_session_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_sessions.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("subjects.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "academic_session_id",
+            "subject_id",
+            name="uq_academic_session_subject",
         ),
     )

@@ -1,19 +1,19 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy import (
-    DateTime,
-    String,
-    Integer,
-    Index,
-    text,
     Boolean,
-    ForeignKey,
-    UniqueConstraint,
     CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    text,
 )
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base, TimestampMixin
@@ -23,6 +23,7 @@ class Department(Base, TimestampMixin):
     __tablename__ = "departments"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -37,7 +38,7 @@ class Department(Base, TimestampMixin):
         String(255),
         nullable=False,
     )
-    
+
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -50,34 +51,40 @@ class DepartmentHODAssignment(Base, TimestampMixin):
     __tablename__ = "department_hod_assignments"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     department_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("departments.id", ondelete="RESTRICT"),
         nullable=False,
     )
 
     faculty_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("faculty_profiles.id", ondelete="RESTRICT"),
         nullable=False,
     )
 
     is_active: Mapped[bool] = mapped_column(
+        Boolean,
         default=True,
         nullable=False,
     )
 
-    assigned_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True),
-    ForeignKey("profiles.id", ondelete="RESTRICT"),
-    nullable=False,
+    assigned_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("profiles.id", ondelete="RESTRICT"),
+        nullable=False,
     )
 
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
+
     __table_args__ = (
         CheckConstraint(
             "(is_active IS TRUE AND ended_at IS NULL) "
@@ -95,13 +102,15 @@ class DepartmentHODAssignment(Base, TimestampMixin):
 
 class Program(Base, TimestampMixin):
     __tablename__ = "programs"
-    
+
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     department_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("departments.id", ondelete="RESTRICT"),
         nullable=False,
     )
@@ -138,11 +147,13 @@ class Batch(Base, TimestampMixin):
     __tablename__ = "batches"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     program_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("programs.id", ondelete="RESTRICT"),
         nullable=False,
     )
@@ -163,28 +174,30 @@ class Batch(Base, TimestampMixin):
     )
 
     __table_args__ = (
-    UniqueConstraint(
-        "program_id",
-        "start_year",
-        "end_year",
-        name="uq_batch_program_years",
-    ),
-    CheckConstraint(
-        "end_year > start_year",
-        name="ck_batch_valid_year_range",
-    ),
-)
+        UniqueConstraint(
+            "program_id",
+            "start_year",
+            "end_year",
+            name="uq_batch_program_years",
+        ),
+        CheckConstraint(
+            "end_year > start_year",
+            name="ck_batch_valid_year_range",
+        ),
+    )
 
 
 class Section(Base, TimestampMixin):
     __tablename__ = "sections"
 
     id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
     batch_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
         ForeignKey("batches.id", ondelete="RESTRICT"),
         nullable=False,
     )

@@ -24,10 +24,12 @@ from app.models.academic import (
 from app.models.assignments import (
     OfferingStatus,
     Subject,
+    AcademicSessionSubject,
     SubjectOffering,
     TeachingAssignment,
     SectionMentorAssignment,
 )
+
 
 from app.models.attendance import (
     AttendanceStatus,
